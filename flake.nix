@@ -1,25 +1,34 @@
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-  inputs.miniCompileCommands = {
-    url = github:danielbarter/mini_compile_commands/v0.6;
-    flake = false;
+  description = "Hades Saves Extractor";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    hse-src = {
+      type = "git";
+      # url = "github:coldelectrons/HadesSavesExtractor";
+      url = "https://github.com/coldelectrons/HadesSavesExtractor";
+      flake = false;
+      submodules = true;
+    };
   };
-  inputs.koturNixPkgs = {
-    url = github:nkoturovic/kotur-nixpkgs/v0.8.0;
-    flake = false;
-  };
+
   outputs = {
     self,
     nixpkgs,
     flake-utils,
-    ...
+    hse-src,
   }:
-    flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
-      package = import ./default.nix {inherit system pkgs;};
+    flake-utils.lib.eachDefaultSystem ( system:
+    let
+        pkgs = import nixpkgs { inherit system; };
+        # lib = pkgs.lib;
     in {
-      packages.default = package;
-      devShells.default = package.shell;
+      packages = rec {
+        hades-saves-extractor = pkgs.callPackage ./default.nix { src = hse-src; };
+        default = hades-saves-extractor;
+      };
+      # devShells.default = packages.default.shell;
       formatter = pkgs.alejandra;
     });
 }
